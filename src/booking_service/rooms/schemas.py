@@ -33,3 +33,14 @@ class SlotResponse(BaseModel):
     end_time: time
 
     model_config = ConfigDict(from_attributes=True)
+    
+class SlotAvailability(BaseModel):
+    slot_id: int
+    start_time: time
+    end_time: time
+    is_available: bool
+    
+class RoomAvailability(BaseModel):
+    room_id: int
+    room_name: str
+    slots: list[SlotAvailability]

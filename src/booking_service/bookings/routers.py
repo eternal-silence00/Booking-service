@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from booking_service.bookings.service import BookingService
 from booking_service.users.models import User
 from booking_service.core.security import get_admin_user, get_current_user
 from booking_service.core.database import get_db
 from booking_service.bookings.schemas import BookingCreate, BookingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from booking_service.rooms.schemas import RoomAvailability
+from datetime import date
 
 router = APIRouter()
 
@@ -34,3 +36,11 @@ async def cancel_booking(
     service = BookingService(session)
     await service.cancel_booking(booking_id=booking_id, current_user=user)
     return None
+
+@router.get("/availability", response_model=list[RoomAvailability])
+async def get_availability(
+    booking_date: date = Query(..., alias="date"),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+):
+    return await BookingService(session).get_availability(booking_date)

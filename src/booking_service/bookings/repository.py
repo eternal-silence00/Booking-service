@@ -36,3 +36,7 @@ class BookingRepository:
             )
         )
         return result.scalar_one_or_none()
+    
+    async def get_all_by_date(self, booking_date: date):
+        result = await self.session.execute(select(Booking).where(Booking.booking_date == booking_date))
+        return result.scalars().all()

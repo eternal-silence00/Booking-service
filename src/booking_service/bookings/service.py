@@ -4,6 +4,7 @@ from booking_service.rooms.repository import RoomRepository
 from booking_service.bookings.schemas import BookingCreate
 from booking_service.users.models import User, Role
 from fastapi import HTTPException
+from datetime import date
 
 
 
@@ -33,3 +34,26 @@ class BookingService:
         if booking_exists.user_id != current_user.id and current_user.role != Role.ADMIN:
             raise HTTPException(status_code=403, detail="Not allowed to cancel this booking")
         return await self.booking_repo.delete(booking_exists)
+    
+    async def get_availability(self, booking_date: date):
+        bookings = await self.booking_repo.get_all_by_date(booking_date)
+        booked_slot_ids = {booking.slot_id for booking in bookings}
+        rooms = await self.room_repo.get_all_rooms()
+        result = []
+        for room in rooms:
+            slots = await self.room_repo.get_all_room_slots(room.id)
+            slot_list = []
+            for slot in slots:
+                slot_list.append({
+                    "slot_id": slot.id,
+                    "start_time": slot.start_time,
+                    "end_time": slot.end_time,
+                    "is_available": slot.id not in booked_slot_ids
+                })
+            result.append({
+                "room_id": room.id,
+                "room_name": room.name,
+                "slots": slot_list
+            })
+        return result
+        
